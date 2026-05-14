@@ -1876,6 +1876,7 @@ function importarDatos(input) {
 let gasUrl       = localStorage.getItem('gasUrl') || '';
 let gasAutoSave  = localStorage.getItem('gasAutoSave') === '1';
 let gasConnected = false;
+let gasDataLoaded = false; // true once data has been loaded from Sheets
 let _gasSaving   = false;
 
 function gasSetStatus(msg, type) {
@@ -1894,6 +1895,7 @@ function forceGasConnect() {
   gasUrl = val;
   localStorage.setItem('gasUrl', val);
   gasConnected = true;
+  gasDataLoaded = true;
   renderGasModal();
   updateDriveBtnStyle(true);
   gasSetStatus('Conexión forzada. Prueba guardar datos para verificar que funcione.', 'info');
@@ -1942,9 +1944,27 @@ async function gasTestConnection() {
     if (d.ok) {
       gasConnected = true;
       localStorage.setItem('gasUrl', gasUrl);
+      // Auto-load data when connecting
       renderGasModal();
-      gasSetStatus('✓ Conectado correctamente', 'ok');
+      gasSetStatus('✓ Conectado. Cargando datos…', 'ok');
       updateDriveBtnStyle(true);
+      // Load data automatically
+      try {
+        const loadUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=load';
+        const ld = await _gasFetch(loadUrl);
+        if (ld.ok && ld.data.vehicles && ld.data.vehicles.length) {
+          applyData({vehicles: ld.data.vehicles, mantenciones: ld.data.mantenciones, docFiles:{}, mantFiles:{}});
+          gasDataLoaded = true;
+          markSaved();
+          gasSetStatus(`✓ Conectado — ${ld.data.vehicles.length} vehículos cargados`, 'ok');
+        } else {
+          gasDataLoaded = true; // empty sheet is also "loaded"
+          gasSetStatus('✓ Conectado correctamente — planilla vacía', 'ok');
+        }
+      } catch(e) {
+        gasSetStatus('✓ Conectado. Carga los datos manualmente.', 'ok');
+      }
+      renderGasModal();
     } else {
       gasSetStatus('✗ Error: ' + (d.error||JSON.stringify(d)), 'error');
     }
@@ -1961,6 +1981,7 @@ async function gasTestConnection() {
 function renderGasModal() {
   const disconn = document.getElementById('gasDisconnected');
   const conn    = document.getElementById('gasConnected');
+  const warn    = document.getElementById('gasLoadWarning');
   if (!disconn || !conn) return;
   if (gasConnected) {
     disconn.style.display = 'none';
@@ -1968,6 +1989,7 @@ function renderGasModal() {
     const short = gasUrl.length > 60 ? gasUrl.slice(0,30)+'…'+gasUrl.slice(-15) : gasUrl;
     document.getElementById('gasUrlDisplay').textContent = short;
     document.getElementById('gasAutoSaveCheck').checked = gasAutoSave;
+    if (warn) warn.style.display = gasDataLoaded ? 'none' : 'block';
   } else {
     disconn.style.display = 'block';
     conn.style.display = 'none';
@@ -1997,6 +2019,10 @@ function updateDriveBtnStyle(connected) {
 
 async function gasSave() {
   if (!gasUrl) { alert('Configura la URL del Apps Script primero.'); return; }
+  if (!gasDataLoaded) {
+    const ok = confirm('⚠️ Aún no has cargado los datos desde Google Sheets.\n\nSi guardas ahora podrías sobreescribir datos de otros usuarios.\n\n¿Deseas cargar primero los datos existentes?\n\n• "Aceptar" → Cargar datos primero (recomendado)\n• "Cancelar" → Guardar de todas formas (puede sobreescribir)');
+    if (ok) { await gasLoad(); return; }
+  }
   if (_gasSaving) return;
   _gasSaving = true;
   const btn = document.getElementById('gasSaveBtn');
@@ -2050,6 +2076,7 @@ async function gasLoad() {
       if(btn){btn.disabled=false;btn.textContent='Cargar desde Sheets';} return;
     }
     applyData({vehicles:v, mantenciones:m, docFiles:{}, mantFiles:{}});
+    gasDataLoaded = true;
     closeModal('driveModal');
     gasSetStatus(`✓ ${v.length} vehículos y ${m.length} mantenciones cargados`, 'ok');
     document.getElementById('gasLastSave').textContent = `Cargado: ${new Date().toLocaleString('es-CL')}`;
@@ -2142,6 +2169,7 @@ async function startupLoad() {
     const d = await _gasFetch(loadUrl);
     if (d.ok && d.data.vehicles && d.data.vehicles.length) {
       applyData({vehicles: d.data.vehicles, mantenciones: d.data.mantenciones, docFiles:{}, mantFiles:{}});
+      gasDataLoaded = true;
       markSaved();
       const ts = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
       const el = document.getElementById('gasLastSave');
@@ -2259,6 +2287,9 @@ startupLoad();
           <div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="gasUrlDisplay"></div>
         </div>
         <button class="btn btn-sm" onclick="clearGasUrl()" style="flex-shrink:0">Desconectar</button>
+      </div>
+      <div id="gasLoadWarning" style="display:none;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;font-size:12px;color:var(--warn)">
+        ⚠️ <strong>Carga los datos primero</strong> antes de guardar para no sobreescribir información de otros usuarios.
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
         <button class="btn btn-primary" onclick="gasSave()" id="gasSaveBtn">
