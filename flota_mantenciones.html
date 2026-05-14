@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flota Vehicular — Gestión de Mantenciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f2ed;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: rgba(40,35,25,0.12);
+    --border-med: rgba(40,35,25,0.22);
+    --text: #1a1710;
+    --text-2: #6b6455;
+    --text-3: #a09484;
+    --accent: #2b4a2e;
+    --accent-light: #e8f0e8;
+    --accent-text: #1d3320;
+    --danger: #b83232;
+    --danger-bg: #fdf0f0;
+    --danger-border: rgba(184,50,50,0.2);
+    --warn: #a06020;
+    --warn-bg: #fdf6ed;
+    --warn-border: rgba(160,96,32,0.2);
+    --ok: #2b6b38;
+    --ok-bg: #edf6ee;
+    --ok-border: rgba(43,107,56,0.2);
+    --info: #1e4a8a;
+    --info-bg: #edf2fb;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 230px;
+    background: var(--accent);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 50;
+  }
+
+  .sidebar-brand {
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-brand .logo-icon {
+    width: 34px; height: 34px;
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  .sidebar-brand h1 {
+    font-size: 14px; font-weight: 600;
+    color: #fff; letter-spacing: -0.2px;
+  }
+  .sidebar-brand p { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+  .sidebar-nav { padding: 1rem 0.75rem; flex: 1; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    padding: 0 0.5rem;
+    margin-bottom: 6px; margin-top: 1rem;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: rgba(255,255,255,0.65);
+    font-size: 13px; font-weight: 400;
+    transition: all 0.15s;
+    text-decoration: none;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 500; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 1rem 0.75rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* MAIN */
+  .main { margin-left: 230px; flex: 1; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .page-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .page-sub { font-size: 12px; color: var(--text-2); }
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .content { padding: 1.75rem 2rem; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border-med);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff; border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #1d3320; }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  /* METRICS */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 1.75rem;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .metric-label { font-size: 11px; color: var(--text-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .metric-value { font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  .metric-value.ok { color: var(--ok); }
+  .metric-value.warn { color: var(--warn); }
+  .metric-value.danger { color: var(--danger); }
+  .metric-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+  /* ALERTS */
+  .alert { 
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; margin-bottom: 8px;
+  }
+  .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+  .alert-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-body { padding: 0; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-2);
+    padding: 10px 16px;
+    text-align: left;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 11px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .text-center { text-align: center; }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+  .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+  .badge-info { background: var(--info-bg); color: var(--info); }
+  .badge-neutral { background: var(--surface2); color: var(--text-2); }
+
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-ok { background: var(--ok); }
+  .dot-warn { background: var(--warn); }
+  .dot-danger { background: var(--danger); }
+
+  /* VEHICLE TYPE CHIP */
+  .type-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--text-2);
+  }
+  .type-chip svg { width: 13px; height: 13px; }
+
+  /* TIMELINE */
+  .timeline { padding: 0.5rem 1.25rem; }
+  .tl-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-icon {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .tl-icon svg { width: 16px; height: 16px; }
+  .tl-taller { background: var(--info-bg); color: var(--info); }
+  .tl-incidente { background: var(--danger-bg); color: var(--danger); }
+  .tl-compra { background: var(--ok-bg); color: var(--ok); }
+  .tl-body { flex: 1; }
+  .tl-title { font-size: 13px; font-weight: 500; }
+  .tl-meta { font-size: 12px; color: var(--text-2); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 3px; }
+  .tl-meta span { display: flex; align-items: center; gap: 4px; }
+  .tl-meta svg { width: 12px; height: 12px; }
+  .tl-cost { font-size: 12px; font-weight: 600; color: var(--ok); font-family: 'DM Mono', monospace; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ACTION BTN */
+  .action-link {
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; color: var(--info);
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: underline; padding: 0;
+  }
+  .action-link:hover { color: #0a3070; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,8,5,0.45);
+    z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 1.5rem;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform:translateY(8px) scale(0.98); } }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-2);
+    font-size: 18px; line-height: 1;
+    transition: background 0.1s;
+  }
+  .modal-close:hover { background: var(--surface2); }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .form-field { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input, .form-select, .form-textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 11px;
+    border: 1px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(43,74,46,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .section-divider {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 1rem 0 0.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.5rem;
+  }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+  /* EMAIL TAGS */
+  .email-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .email-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; font-size: 12px;
+  }
+  .email-tag button {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); font-size: 14px; line-height: 1; padding: 0;
+  }
+  .email-tag button:hover { color: var(--danger); }
+
+  /* DOC STATUS TABLE */
+  .doc-table th:not(:first-child), .doc-table td:not(:first-child) { text-align: center; }
+
+  /* EMPTY STATE */
+  .empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+  .empty svg { width: 32px; height: 32px; margin: 0 auto 10px; display: block; opacity: 0.4; }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
+
+  /* MANT TYPE TABS */
+  .type-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .type-tab {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border-med);
+    background: var(--surface); color: var(--text-2);
+    transition: all 0.15s;
+  }
+  .type-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .type-tab.active-taller { background: var(--info-bg); color: var(--info); border-color: rgba(30,74,138,0.25); }
+  .type-tab.active-incidente { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+  .type-tab.active-compra { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-border); }
+  .type-tab svg { width: 15px; height: 15px; }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border: 1.5px dashed var(--border-med);
+    border-radius: var(--radius);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: all 0.15s;
+    background: var(--surface2);
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .drop-zone svg { width: 28px; height: 28px; color: var(--text-3); }
+  .drop-zone span { font-size: 13px; color: var(--text-2); }
+
+  /* FILE PREVIEW */
+  .file-preview-box {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .file-icon {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 18px;
+  }
+  .file-icon-pdf { background: #fde8e8; color: var(--danger); }
+  .file-icon-img { background: var(--info-bg); color: var(--info); }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-size { font-size: 11px; color: var(--text-3); }
+  .file-thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+
+  /* ATTACHED FILE BADGE in tables */
+  .attach-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--ok-border);
+    background: var(--ok-bg); color: var(--ok);
+    transition: all .15s;
+  }
+  .attach-btn:hover { background: #d5eeda; }
+  .attach-btn svg { width: 11px; height: 11px; }
+  .no-attach { font-size: 11px; color: var(--text-3); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 3px; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <h1>Flota Vehicular</h1>
+      <p>Gestión de mantenciones</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a class="nav-item active" onclick="showSection('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" onclick="showSection('flota', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Flota
+      </a>
+      <a class="nav-item" onclick="showSection('documentacion', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+        Documentación
+      </a>
+      <div class="nav-section-label">Mantenciones</div>
+      <a class="nav-item" onclick="showSection('mantenciones', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Registrar
+      </a>
+      <a class="nav-item" onclick="showSection('historial', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        Historial
+      </a>
+      <div class="nav-section-label">Config</div>
+      <a class="nav-item" onclick="showSection('alertas', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alertas y Correos
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);">v1.0 — 2025</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-sub" id="pageSub">Resumen general de flota</div>
+      </div>
+      <div class="topbar-actions">
+        <div id="unsavedIndicator" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-border);padding:5px 12px;border-radius:var(--radius-sm)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Cambios sin guardar
+          <button onclick="openModal('driveModal')" style="background:var(--warn);color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit">Guardar</button>
+        </div>
+        <button class="btn" onclick="openModal('dataModal')" title="Guardar / Cargar datos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Datos
+        </button>
+        <button class="btn" id="driveBtn" onclick="openModal('driveModal')" title="Google Drive">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 19h20L12 2z"/><path d="M2 19h20"/><path d="M12 2L6 19"/><path d="M12 2l6 17"/></svg>
+          <span id="driveBtnLabel">Drive</span>
+        </button>
+        <button class="btn" onclick="openModal('alertasModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Alertas
+        </button>
+        <button class="btn btn-primary" onclick="openNewVehiculo()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Vehículo
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Banner de carga inicial -->
+      <div id="startupBanner" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--info-bg);border:1px solid rgba(30,74,138,0.15);border-radius:var(--radius);margin-bottom:1.25rem;font-size:13px;color:var(--info)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Cargando tus datos desde Google Sheets…
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="section-dashboard" class="section active">
+        <div class="metrics-grid" id="metricsGrid"></div>
+        <div id="alertBanners" style="margin-bottom:1.5rem"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Documentos por vencer</span></div>
+            <div class="card-body" id="dashDocList"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Últimas mantenciones</span></div>
+            <div class="card-body" id="dashMantList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLOTA -->
+      <div id="section-flota" class="section">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Vehículos registrados</span>
+            <button class="btn btn-sm btn-primary" onclick="openNewVehiculo()">+ Agregar</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Vehículo</th>
+                  <th>Tipo</th>
+                  <th>Patente</th>
+                  <th>Conductor</th>
+                  <th class="text-center">SOAP</th>
+                  <th class="text-center">Rev. Téc.</th>
+                  <th class="text-center">Perm. Circ.</th>
+                  <th class="text-center">Seguro</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="flotaBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTACIÓN -->
+      <div id="section-documentacion" class="section">
+        <div id="docsContent"></div>
+      </div>
+
+      <!-- MANTENCIONES -->
+      <div id="section-mantenciones" class="section">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap">
+          <div class="type-tabs" style="margin-bottom:0">
+            <button class="type-tab active-taller" onclick="openMantModal('taller')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+              Ingreso a taller
+            </button>
+            <button class="type-tab active-incidente" onclick="openMantModal('incidente')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Incidente
+            </button>
+            <button class="type-tab active-compra" onclick="openMantModal('compra')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              Compra elemento
+            </button>
+          </div>
+          <select class="form-select" id="mantVehFilter" onchange="renderMant()" style="width:220px;flex-shrink:0">
+            <option value="all">Todos los vehículos</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Registro de mantención</span></div>
+          <div class="card-body timeline" id="mantList"></div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="section-historial" class="section">
+        <div class="filter-bar">
+          <select class="form-select" id="histVehFilter" onchange="renderHistorial()" style="width:200px">
+            <option value="all">Todos los vehículos</option>
+          </select>
+          <select class="form-select" id="histTipoFilter" onchange="renderHistorial()" style="width:180px">
+            <option value="all">Todos los tipos</option>
+            <option value="taller">Taller</option>
+            <option value="incidente">Incidente</option>
+            <option value="compra">Compra</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Historial completo</span></div>
+          <div class="card-body timeline" id="histList"></div>
+        </div>
+      </div>
+
+      <!-- ALERTAS CONFIG -->
+      <div id="section-alertas" class="section">
+        <div style="max-width:640px">
+
+          <!-- Google connection status banner -->
+          <div id="googleStatusBanner" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:1.25rem;font-size:13px;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)">
+            ✓ Conectado a Google — Gmail y Calendar disponibles
+          </div>
+          <div id="googleWarnBanner" style="padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:1.25rem;font-size:13px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)">
+            ⚠ Para enviar correos y crear eventos, primero conecta Google desde el botón <strong>Drive</strong> en la barra superior.
+          </div>
+
+          <div class="card" style="margin-bottom:1.25rem">
+            <div class="card-header"><span class="card-title">Correos de notificación</span></div>
+            <div style="padding:1.25rem">
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input type="email" class="form-input" id="newEmailInput" placeholder="correo@empresa.cl" style="flex:1" onkeydown="if(event.key==='Enter')addEmail()">
+                <button class="btn btn-primary" onclick="addEmail()">Agregar</button>
+              </div>
+              <div class="email-tags" id="emailTagList"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:1.25rem">
+            <div class="card-header"><span class="card-title">Configuración de alertas</span></div>
+            <div style="padding:1.25rem">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Días de anticipación (aviso)</label>
+                  <input type="number" class="form-input" id="cfgAlertDays" value="30" min="1" max="120">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Días críticos (urgente)</label>
+                  <input type="number" class="form-input" id="cfgCritDays" value="7" min="1" max="30">
+                </div>
+              </div>
+              <div style="margin-top:1rem">
+                <div class="form-label" style="margin-bottom:10px">Documentos a monitorear</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="alSOAP" checked> SOAP</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="alRevTec" checked> Revisión técnica</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="alSeguro" checked> Seguro</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="alPermiso" checked> Permiso de circulación</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gmail card -->
+          <div class="card" style="margin-bottom:1.25rem">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;display:inline;vertical-align:-2px;margin-right:6px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Alertas por Gmail
+              </span>
+            </div>
+            <div style="padding:1.25rem">
+              <p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Envía un correo con el resumen de todos los documentos por vencer a los correos configurados arriba.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="enviarAlertasGmail()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+                  Enviar alertas ahora
+                </button>
+                <button class="btn" onclick="sendTestAlert()">Correo de prueba</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar card -->
+          <div class="card" style="margin-bottom:1.25rem">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;display:inline;vertical-align:-2px;margin-right:6px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Eventos en Google Calendar
+              </span>
+            </div>
+            <div style="padding:1.25rem">
+              <p style="font-size:13px;color:var(--text-2);margin-bottom:6px">Crea eventos automáticos en tu Google Calendar para cada vencimiento de documento. Incluye recordatorios configurados según los días de anticipación.</p>
+              <p style="font-size:12px;color:var(--text-3);margin-bottom:1rem">Las mantenciones que registres también se agregarán automáticamente al calendario.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="crearEventosCalendario()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Crear eventos de vencimientos
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="saveAlertConfig()">Guardar configuración</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- MODAL: Agregar / Editar vehículo -->
+<div class="modal-overlay" id="addVehModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="vehModalTitle">Agregar vehículo</span>
+      <button class="modal-close" onclick="closeModal('addVehModal')">×</button>
+    </div>
+    <input type="hidden" id="vEditId">
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Nombre / identificador</label>
+        <input type="text" class="form-input" id="vNombre" placeholder="Ej: Camioneta Toyota 1">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="vTipo">
+          <option>Camioneta</option><option>Camión</option><option>Carro de arrastre</option><option>Retroexcavadora</option><option>Pluma de camión</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Patente</label>
+        <input type="text" class="form-input" id="vPatente" placeholder="ABCD12">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Año</label>
+        <input type="number" class="form-input" id="vAnio" placeholder="2020">
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="form-field">
+        <label class="form-label">Conductor asignado</label>
+        <input type="text" class="form-input" id="vConductor" placeholder="Nombre del conductor">
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="form-field">
+        <label class="form-label">RUT conductor</label>
+        <input type="text" class="form-input" id="vConductorRut" placeholder="12.345.678-9">
+      </div>
+    </div>
+    <div class="section-divider">Documentos permanentes</div>
+    <div class="form-grid" style="margin-top:0.75rem">
+      <div class="form-field">
+        <label class="form-label">Padrón — fecha emisión</label>
+        <input type="date" class="form-input" id="vPadron">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Factura de compra — fecha emisión</label>
+        <input type="date" class="form-input" id="vFactura">
+      </div>
+    </div>
+    <div class="section-divider">Documentos con vencimiento</div>
+    <div class="form-grid" style="margin-top:0.75rem">
+      <div class="form-field">
+        <label class="form-label">SOAP — emisión</label>
+        <input type="date" class="form-input" id="vSoapEmision">
+      </div>
+      <div class="form-field">
+        <label class="form-label">SOAP — vencimiento</label>
+        <input type="date" class="form-input" id="vSoap">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Rev. técnica — emisión</label>
+        <input type="date" class="form-input" id="vRevTecEmision">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Rev. técnica — vencimiento</label>
+        <input type="date" class="form-input" id="vRevTec">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Perm. circulación — emisión</label>
+        <input type="date" class="form-input" id="vPermisoEmision">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Perm. circulación — vencimiento</label>
+        <input type="date" class="form-input" id="vPermiso">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Seguro — emisión</label>
+        <input type="date" class="form-input" id="vSeguroEmision">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Seguro — vencimiento</label>
+        <input type="date" class="form-input" id="vSeguro">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addVehModal')">Cancelar</button>
+      <button class="btn btn-primary" id="vehModalSaveBtn" onclick="saveVehiculo()">Guardar vehículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Mantención -->
+<div class="modal-overlay" id="mantModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="mantModalTitle">Registrar mantención</span>
+      <button class="modal-close" onclick="closeModal('mantModal')">×</button>
+    </div>
+    <input type="hidden" id="mantType">
+    <input type="hidden" id="mantEditId">
+    <div class="form-grid full">
+      <div class="form-field">
+        <label class="form-label">Nombre del registro</label>
+        <input type="text" class="form-input" id="mNombre" placeholder="Ej: Cambio de aceite, Revisión general...">
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="form-field">
+        <label class="form-label">Vehículo</label>
+        <select class="form-select" id="mVehiculo"><option value="">Seleccionar...</option></select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Fecha</label>
+        <input type="date" class="form-input" id="mFecha">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Costo ($)</label>
+        <input type="number" class="form-input" id="mCosto" placeholder="0">
+      </div>
+    </div>
+    <div class="form-grid full" id="mTallerRow">
+      <div class="form-field">
+        <label class="form-label">Taller / proveedor</label>
+        <input type="text" class="form-input" id="mTaller" placeholder="Nombre del taller">
+      </div>
+    </div>
+    <div class="form-grid full" id="mElementoRow" style="display:none">
+      <div class="form-field">
+        <label class="form-label">Elemento comprado</label>
+        <input type="text" class="form-input" id="mElemento" placeholder="Foco, repuesto, filtro...">
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="form-field">
+        <label class="form-label">Descripción / detalle</label>
+        <textarea class="form-textarea" id="mDesc" placeholder="Descripción del trabajo realizado o del incidente..."></textarea>
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:4px">
+      <label class="form-label">Documentos adjuntos <span style="font-weight:400;text-transform:none;color:var(--text-3)">(informe, fotos, presupuesto…)</span></label>
+      <div id="mDropZone" class="drop-zone" onclick="document.getElementById('mFileInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleMantDrop(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Arrastra o haz clic para agregar documentos</span>
+        <span style="font-size:11px;color:var(--text-3)">PDF, JPG, PNG — múltiples archivos permitidos</span>
+      </div>
+      <input type="file" id="mFileInput" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" multiple onchange="handleMantFileSelect(this)">
+    </div>
+    <div id="mFileList" style="display:none;margin-bottom:12px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('mantModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMant()">Guardar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Actualizar documento -->
+<div class="modal-overlay" id="docModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <span class="modal-title" id="docModalTitle">Actualizar documento</span>
+      <button class="modal-close" onclick="closeModal('docModal')">×</button>
+    </div>
+    <input type="hidden" id="docVehId">
+    <input type="hidden" id="docFieldKey">
+    <input type="hidden" id="docHasExpiry">
+    <div class="form-grid full" id="docEmisionRow">
+      <div class="form-field">
+        <label class="form-label" id="docEmisionLabel">Fecha de emisión</label>
+        <input type="date" class="form-input" id="docEmisionDate">
+      </div>
+    </div>
+    <div class="form-grid full" id="docExpiryRow">
+      <div class="form-field">
+        <label class="form-label">Fecha de vencimiento</label>
+        <input type="date" class="form-input" id="docNewDate">
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:12px">
+      <label class="form-label">Archivo adjunto</label>
+      <div id="dropZone" class="drop-zone" onclick="document.getElementById('docFileInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="dropZoneText">Arrastra o haz clic para subir</span>
+        <span style="font-size:11px;color:var(--text-3)">PDF, JPG, PNG — máx. 10 MB</span>
+      </div>
+      <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="handleFileSelect(this)">
+    </div>
+    <div id="filePreview" style="display:none;margin-bottom:12px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('docModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalle vehículo -->
+<div class="modal-overlay" id="vehDetailModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="vehDetailTitle">Detalle</span>
+      <button class="modal-close" onclick="closeModal('vehDetailModal')">×</button>
+    </div>
+    <div id="vehDetailBody"></div>
+  </div>
+</div>
+
+<!-- MODAL: Alertas -->
+<div class="modal-overlay" id="alertasModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Configurar alertas por correo</span>
+      <button class="modal-close" onclick="closeModal('alertasModal')">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Ingresa los correos que recibirán notificaciones de vencimientos.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="email" class="form-input" id="modalNewEmail" placeholder="correo@empresa.cl" style="flex:1">
+      <button class="btn btn-primary" onclick="addEmailModal()">Agregar</button>
+    </div>
+    <div class="email-tags" id="modalEmailTagList"></div>
+    <div class="section-divider" style="margin-top:1rem">Anticipación</div>
+    <div class="form-grid" style="margin-top:0.75rem">
+      <div class="form-field">
+        <label class="form-label">Días de anticipación</label>
+        <input type="number" class="form-input" id="mAlertDays" value="30">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Días críticos</label>
+        <input type="number" class="form-input" id="mCritDays" value="7">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="sendTestAlert()">Prueba</button>
+      <button class="btn" onclick="closeModal('alertasModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAlertModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── HELPERS ───────────────────────────────────────────────────
+const today = new Date(); today.setHours(0,0,0,0);
+const fmt = d => d.toISOString().split('T')[0];
+const fmtDate = s => { if(!s) return '—'; const d = new Date(s); return d.toLocaleDateString('es-CL'); };
+const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate()+n); return r; };
+const diffDays = s => { if(!s) return 9999; const d = new Date(s); d.setHours(0,0,0,0); return Math.round((d-today)/(1000*60*60*24)); };
+const statusOf = s => { const d=diffDays(s); return d<0?'danger':d<=30?'warn':'ok'; };
+const statusLabel = s => { const d=diffDays(s); if(!s)return 'Sin fecha'; if(d<0)return 'Vencido'; if(d<=7)return `Vence en ${d}d`; if(d<=30)return `Vence en ${d}d`; return 'Vigente'; };
+
+const iconSVG = {
+  taller: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/></svg>`,
+  incidente: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>`,
+  compra: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`
+};
+
+// ─── DATA ──────────────────────────────────────────────────────
+let vehicles = [];
+let mantenciones = [];
+
+let nextVehId = 7, nextMantId = 6;
+let alertEmails = ['admin@empresa.cl'];
+let alertCfg = { days: 30, critDays: 7 };
+let docFiles = {}; // key: `${vehId}_${docField}` → { name, type, size, data(base64) }
+
+// Documentos permanentes: fecha de emisión, NO vencen
+const DOCS_PERM = [
+  {k:'padron',  l:'Padrón',            hint:'Fecha de emisión'},
+  {k:'factura', l:'Factura de compra', hint:'Fecha de emisión'},
+];
+// Documentos con vencimiento: fecha de emisión + fecha de vencimiento
+const DOCS_VENC = [
+  {k:'soap',    l:'SOAP'},
+  {k:'revtec',  l:'Revisión técnica'},
+  {k:'permiso', l:'Permiso de circulación'},
+  {k:'seguro',  l:'Seguro'},
+];
+const DOCS_ALL = [...DOCS_PERM, ...DOCS_VENC];
+const DOCS = DOCS_VENC; // alias: solo los que vencen (para alertas)
+
+// ─── NAVIGATION ────────────────────────────────────────────────
+const pageTitles = {
+  dashboard: ['Dashboard','Resumen general de flota'],
+  flota: ['Flota vehicular','Vehículos registrados'],
+  documentacion: ['Documentación','Estado de documentos por vehículo'],
+  mantenciones: ['Mantenciones','Registrar nuevo ingreso'],
+  historial: ['Historial','Registro completo de mantenciones'],
+  alertas: ['Alertas y Correos','Configuración de notificaciones']
+};
+
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const t = pageTitles[name] || [name,''];
+  document.getElementById('pageTitle').textContent = t[0];
+  document.getElementById('pageSub').textContent = t[1];
+  if (name==='dashboard') renderDashboard();
+  if (name==='flota') renderFlota();
+  if (name==='documentacion') renderDocs();
+  if (name==='mantenciones') renderMant();
+  if (name==='historial') renderHistorial();
+  if (name==='alertas') renderEmailPage();
+}
+
+// ─── MODALS ────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id==='mantModal') populateMantSelect();
+  if (id==='alertasModal') { renderEmailModal(); document.getElementById('mAlertDays').value=alertCfg.days; document.getElementById('mCritDays').value=alertCfg.critDays; }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) closeModal(el.id); }));
+
+// ─── VEHICLES ──────────────────────────────────────────────────
+function openNewVehiculo() {
+  document.getElementById('vEditId').value = '';
+  document.getElementById('vehModalTitle').textContent = 'Agregar vehículo';
+  document.getElementById('vehModalSaveBtn').textContent = 'Guardar vehículo';
+  ['vNombre','vPatente','vAnio','vConductor','vConductorRut',
+   'vPadron','vFactura',
+   'vSoapEmision','vSoap','vRevTecEmision','vRevTec',
+   'vPermisoEmision','vPermiso','vSeguroEmision','vSeguro'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('vTipo').value = 'Camioneta';
+  openModal('addVehModal');
+}
+
+function openEditVehiculo(id) {
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  document.getElementById('vEditId').value = v.id;
+  document.getElementById('vehModalTitle').textContent = 'Editar vehículo';
+  document.getElementById('vehModalSaveBtn').textContent = 'Guardar cambios';
+  document.getElementById('vNombre').value = v.nombre;
+  document.getElementById('vTipo').value = v.tipo;
+  document.getElementById('vPatente').value = v.patente === '—' ? '' : v.patente;
+  document.getElementById('vAnio').value = v.anio;
+  document.getElementById('vConductor').value = v.conductor || '';
+  document.getElementById('vConductorRut').value = v.conductorRut || '';
+  document.getElementById('vPadron').value = v.padron || '';
+  document.getElementById('vFactura').value = v.factura || '';
+  document.getElementById('vSoapEmision').value = v.soap_emision || '';
+  document.getElementById('vSoap').value = v.soap || '';
+  document.getElementById('vRevTecEmision').value = v.revtec_emision || '';
+  document.getElementById('vRevTec').value = v.revtec || '';
+  document.getElementById('vPermisoEmision').value = v.permiso_emision || '';
+  document.getElementById('vPermiso').value = v.permiso || '';
+  document.getElementById('vSeguroEmision').value = v.seguro_emision || '';
+  document.getElementById('vSeguro').value = v.seguro || '';
+  openModal('addVehModal');
+}
+
+function saveVehiculo() {
+  const n = document.getElementById('vNombre').value.trim();
+  if (!n) { alert('Ingresa un nombre'); return; }
+  const editId = parseInt(document.getElementById('vEditId').value);
+  const data = {
+    nombre: n,
+    tipo: document.getElementById('vTipo').value,
+    patente: document.getElementById('vPatente').value || '—',
+    anio: document.getElementById('vAnio').value || '',
+    conductor: document.getElementById('vConductor').value.trim(),
+    conductorRut: document.getElementById('vConductorRut').value.trim(),
+    padron: document.getElementById('vPadron').value,
+    factura: document.getElementById('vFactura').value,
+    soap_emision: document.getElementById('vSoapEmision').value,
+    soap: document.getElementById('vSoap').value,
+    revtec_emision: document.getElementById('vRevTecEmision').value,
+    revtec: document.getElementById('vRevTec').value,
+    permiso_emision: document.getElementById('vPermisoEmision').value,
+    permiso: document.getElementById('vPermiso').value,
+    seguro_emision: document.getElementById('vSeguroEmision').value,
+    seguro: document.getElementById('vSeguro').value
+  };
+  if (editId) {
+    const idx = vehicles.findIndex(x=>x.id===editId);
+    if (idx>=0) vehicles[idx] = {...vehicles[idx], ...data};
+  } else {
+    vehicles.push({id: nextVehId++, ...data});
+  }
+  closeModal('addVehModal');
+  renderFlota(); renderDashboard();
+}
+
+function deleteVehiculo(id) {
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  const hasMant = mantenciones.some(m=>m.vehId===id);
+  const msg = hasMant
+    ? `¿Eliminar "${v.nombre}"?\n\nEste vehículo tiene mantenciones registradas. Al eliminarlo, esos registros quedarán sin vehículo asociado.`
+    : `¿Eliminar "${v.nombre}"?`;
+  if (!confirm(msg)) return;
+  vehicles = vehicles.filter(x=>x.id!==id);
+  renderFlota(); renderDashboard();
+}
+
+function addVehiculo() { saveVehiculo(); } // legacy alias
+
+function renderFlota() {
+  document.getElementById('flotaBody').innerHTML = vehicles.map(v => `
+    <tr>
+      <td><strong style="font-size:13px">${v.nombre}</strong></td>
+      <td><span class="type-chip">${v.tipo}</span></td>
+      <td><code style="font-family:'DM Mono',monospace;font-size:12px;background:var(--surface2);padding:2px 7px;border-radius:4px">${v.patente}</code></td>
+      <td>
+        ${v.conductor
+          ? `<div style="font-size:13px;font-weight:500">${v.conductor}</div>${v.conductorRut?`<div style="font-size:11px;color:var(--text-3)">${v.conductorRut}</div>`:''}`
+          : `<span style="font-size:12px;color:var(--text-3)">Sin asignar</span>`}
+      </td>
+      ${DOCS_VENC.map(d=>`<td class="text-center"><span class="dot dot-${statusOf(v[d.k])}" title="${d.l}: ${fmtDate(v[d.k])} · ${statusLabel(v[d.k])}"></span></td>`).join('')}
+      <td>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="action-link" onclick="showVehDetail(${v.id})">Ver</button>
+          <button class="action-link" onclick="openEditVehiculo(${v.id})">Editar</button>
+          <button class="action-link" style="color:var(--danger)" onclick="deleteVehiculo(${v.id})">Eliminar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function showVehDetail(id) {
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  const mants = mantenciones.filter(m=>m.vehId===id).slice(0,5);
+  document.getElementById('vehDetailTitle').textContent = v.nombre;
+
+  const fileBtn = (fk) => {
+    const f = docFiles[fk];
+    return f ? `<button class="attach-btn" onclick="openFileViewer('${fk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>Ver</button>` : '';
+  };
+
+  const permRows = DOCS_PERM.map(d=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <span style="font-size:13px">${d.l}</span>
+        <span class="badge badge-info" style="margin-left:6px;font-size:10px">Permanente</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        ${fileBtn(`${v.id}_${d.k}`)}
+        <span style="font-size:12px;color:var(--text-2)">Emitido: ${fmtDate(v[d.k])}</span>
+        <button class="action-link" onclick="closeModal('vehDetailModal');openDocModal(${v.id},'${d.k}','${d.l}',false)">Actualizar</button>
+      </div>
+    </div>`).join('');
+
+  const vencRows = DOCS_VENC.map(d=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px">${d.l}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        ${fileBtn(`${v.id}_${d.k}`)}
+        <span style="font-size:12px;color:var(--text-3)">Emisión: ${fmtDate(v[`${d.k}_emision`])}</span>
+        <span class="badge badge-${statusOf(v[d.k])}">${fmtDate(v[d.k])} · ${statusLabel(v[d.k])}</span>
+        <button class="action-link" onclick="closeModal('vehDetailModal');openDocModal(${v.id},'${d.k}','${d.l}',true)">Actualizar</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('vehDetailBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--accent)">${v.nombre.charAt(0)}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:15px">${v.nombre}</div>
+        <div style="font-size:12px;color:var(--text-2)">${v.tipo} · ${v.patente} · ${v.anio}</div>
+      </div>
+      <button class="btn btn-sm" onclick="closeModal('vehDetailModal');openEditVehiculo(${v.id})">Editar</button>
+    </div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:8px">Conductor asignado</div>
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:1rem">
+      ${v.conductor
+        ? `<div style="font-size:13px;font-weight:500">${v.conductor}</div>${v.conductorRut?`<div style="font-size:12px;color:var(--text-2)">RUT: ${v.conductorRut}</div>`:''}`
+        : `<span style="font-size:13px;color:var(--text-3)">Sin conductor asignado</span>`}
+    </div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:8px">Documentos permanentes</div>
+    ${permRows}
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin:1rem 0 8px">Documentos con vencimiento</div>
+    ${vencRows}
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin:1rem 0 8px">Últimas mantenciones</div>
+    ${mants.length ? mants.map(m=>{
+      const labels={taller:'Taller',incidente:'Incidente',compra:'Compra'};
+      return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:500">${labels[m.tipo]}</span><span style="font-size:12px;color:var(--text-2)">${fmtDate(m.fecha)}</span></div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:2px">${m.desc}</div>
+        ${m.costo?`<div style="font-size:12px;color:var(--ok);font-family:'DM Mono',monospace;margin-top:2px">$${m.costo.toLocaleString('es-CL')}</div>`:''}
+      </div>`;
+    }).join('') : '<p style="font-size:13px;color:var(--text-3);padding:10px 0">Sin mantenciones registradas.</p>'}
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button class="btn btn-danger btn-sm" onclick="if(confirm('¿Eliminar este vehículo?')){closeModal('vehDetailModal');deleteVehiculo(${v.id})}">Eliminar vehículo</button>
+    </div>
+  `;
+  openModal('vehDetailModal');
+}
+
+// ─── DOCS ──────────────────────────────────────────────────────
+function openDocModal(vehId, field, label, hasExpiry) {
+  document.getElementById('docVehId').value = vehId;
+  document.getElementById('docFieldKey').value = field;
+  document.getElementById('docHasExpiry').value = hasExpiry ? '1' : '0';
+  document.getElementById('docModalTitle').textContent = label;
+  const v = vehicles.find(x=>x.id==vehId);
+  // Emission date
+  const emKey = `${field}_emision`;
+  document.getElementById('docEmisionRow').style.display = 'block';
+  document.getElementById('docEmisionDate').value = (v && v[emKey]) ? v[emKey] : (v && v[field] && !hasExpiry ? v[field] : '');
+  // Expiry date row
+  const expiryRow = document.getElementById('docExpiryRow');
+  expiryRow.style.display = hasExpiry ? 'block' : 'none';
+  if (hasExpiry && v && v[field]) document.getElementById('docNewDate').value = v[field];
+  else document.getElementById('docNewDate').value = '';
+  // Label adjustment for permanent docs
+  document.getElementById('docEmisionLabel').textContent = hasExpiry ? 'Fecha de emisión' : 'Fecha de emisión del documento';
+  // Reset file UI
+  document.getElementById('docFileInput').value = '';
+  document.getElementById('dropZoneText').textContent = 'Arrastra o haz clic para subir';
+  document.getElementById('dropZone').classList.remove('drag-over');
+  document.getElementById('filePreview').style.display = 'none';
+  document.getElementById('filePreview').innerHTML = '';
+  window._pendingFile = null;
+  const fileKey = `${vehId}_${field}`;
+  if (docFiles[fileKey]) showExistingFile(docFiles[fileKey]);
+  openModal('docModal');
+}
+
+function handleFileSelect(input) {
+  if (input.files && input.files[0]) processFile(input.files[0]);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+}
+
+function processFile(file) {
+  if (file.size > 10 * 1024 * 1024) { alert('El archivo supera los 10 MB.'); return; }
+  const allowed = ['application/pdf','image/jpeg','image/png','image/webp'];
+  if (!allowed.includes(file.type)) { alert('Formato no permitido. Usa PDF, JPG o PNG.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._pendingFile = { name: file.name, type: file.type, size: file.size, data: e.target.result };
+    document.getElementById('dropZoneText').textContent = '✓ Archivo listo';
+    renderFilePreview(window._pendingFile, 'filePreview', true);
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderFilePreview(f, containerId, allowRemove) {
+  const box = document.getElementById(containerId);
+  const isImg = f.type.startsWith('image/');
+  const isPdf = f.type === 'application/pdf';
+  const sizeTxt = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
+  box.style.display = 'block';
+  box.innerHTML = `<div class="file-preview-box">
+    ${isImg ? `<img src="${f.data}" class="file-thumb" alt="preview">` : `<div class="file-icon ${isPdf?'file-icon-pdf':'file-icon-img'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>`}
+    <div class="file-info">
+      <div class="file-name">${f.name}</div>
+      <div class="file-size">${sizeTxt}</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-sm" onclick="viewFile('${containerId}')" title="Ver archivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="btn btn-sm" onclick="downloadFile('${containerId}')" title="Descargar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      ${allowRemove ? `<button class="btn btn-sm btn-danger" onclick="removeFile()" title="Quitar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>` : ''}
+    </div>
+  </div>`;
+  box._fileData = f;
+}
+
+function showExistingFile(f) {
+  renderFilePreview(f, 'filePreview', true);
+  document.getElementById('dropZoneText').textContent = '✓ Archivo actual adjunto';
+  window._pendingFile = f;
+}
+
+function removeFile() {
+  window._pendingFile = null;
+  document.getElementById('filePreview').style.display = 'none';
+  document.getElementById('filePreview').innerHTML = '';
+  document.getElementById('dropZoneText').textContent = 'Arrastra o haz clic para subir';
+  document.getElementById('docFileInput').value = '';
+}
+
+function viewFile(containerId) {
+  const box = document.getElementById(containerId);
+  const f = box._fileData || window._pendingFile;
+  if (!f) return;
+  const win = window.open();
+  if (f.type === 'application/pdf') {
+    win.document.write(`<iframe src="${f.data}" style="width:100%;height:100vh;border:none"></iframe>`);
+  } else {
+    win.document.write(`<img src="${f.data}" style="max-width:100%;display:block;margin:auto">`);
+  }
+}
+
+function downloadFile(containerId) {
+  const box = document.getElementById(containerId);
+  const f = box._fileData || window._pendingFile;
+  if (!f) return;
+  const a = document.createElement('a'); a.href = f.data; a.download = f.name; a.click();
+}
+
+function saveDoc() {
+  const id = parseInt(document.getElementById('docVehId').value);
+  const field = document.getElementById('docFieldKey').value;
+  const hasExpiry = document.getElementById('docHasExpiry').value === '1';
+  const emision = document.getElementById('docEmisionDate').value;
+  const date = document.getElementById('docNewDate').value;
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  // Save emission date
+  if (emision) {
+    if (hasExpiry) v[`${field}_emision`] = emision;
+    else v[field] = emision; // permanent docs: the field IS the emission date
+  }
+  // Save expiry date (only for expiring docs)
+  if (hasExpiry && date) v[field] = date;
+  // Save file
+  const fileKey = `${id}_${field}`;
+  if (window._pendingFile) {
+    docFiles[fileKey] = window._pendingFile;
+  } else if (!document.getElementById('filePreview').innerHTML) {
+    delete docFiles[fileKey];
+  }
+  window._pendingFile = null;
+  closeModal('docModal'); renderFlota(); renderDocs(); renderDashboard();
+}
+
+function renderDocs() {
+  const attachIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>`;
+
+  const renderPermRow = (v, d) => {
+    const fk = `${v.id}_${d.k}`;
+    const f = docFiles[fk];
+    return `<tr>
+      <td><strong style="font-size:13px">${v.nombre}</strong><span style="font-size:12px;color:var(--text-2)"> · ${v.patente}</span></td>
+      <td class="text-center" style="font-family:'DM Mono',monospace;font-size:13px">${fmtDate(v[d.k])}</td>
+      <td class="text-center">
+        <span class="badge badge-neutral" style="font-size:11px">Sin vencimiento</span>
+      </td>
+      <td class="text-center">${f
+        ? `<button class="attach-btn" onclick="openFileViewer('${fk}')">${attachIcon}${f.name.length>15?f.name.slice(0,12)+'…':f.name}</button>`
+        : `<span class="no-attach">Sin archivo</span>`}
+      </td>
+      <td><button class="action-link" onclick="openDocModal(${v.id},'${d.k}','${d.l}',false)">Actualizar</button></td>
+    </tr>`;
+  };
+
+  const renderVencRow = (v, d) => {
+    const fk = `${v.id}_${d.k}`;
+    const f = docFiles[fk];
+    const emKey = `${d.k}_emision`;
+    return `<tr>
+      <td><strong style="font-size:13px">${v.nombre}</strong><span style="font-size:12px;color:var(--text-2)"> · ${v.patente}</span></td>
+      <td class="text-center" style="font-family:'DM Mono',monospace;font-size:13px">${fmtDate(v[emKey])}</td>
+      <td class="text-center" style="font-family:'DM Mono',monospace;font-size:13px">${fmtDate(v[d.k])}</td>
+      <td class="text-center"><span class="badge badge-${statusOf(v[d.k])}">${statusLabel(v[d.k])}</span></td>
+      <td class="text-center">${f
+        ? `<button class="attach-btn" onclick="openFileViewer('${fk}')">${attachIcon}${f.name.length>15?f.name.slice(0,12)+'…':f.name}</button>`
+        : `<span class="no-attach">Sin archivo</span>`}
+      </td>
+      <td><button class="action-link" onclick="openDocModal(${v.id},'${d.k}','${d.l}',true)">Actualizar</button></td>
+    </tr>`;
+  };
+
+  document.getElementById('docsContent').innerHTML = `
+    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--info);display:inline-block"></span>
+      Documentos permanentes — sin vencimiento
+    </div>
+    ${DOCS_PERM.map(d=>`
+    <div class="card" style="margin-bottom:1.25rem">
+      <div class="card-header"><span class="card-title">${d.l}</span><span style="font-size:11px;color:var(--text-3)">${d.hint}</span></div>
+      <table><thead><tr><th>Vehículo</th><th>Fecha emisión</th><th>Vencimiento</th><th class="text-center">Adjunto</th><th></th></tr></thead>
+      <tbody>${vehicles.map(v=>renderPermRow(v,d)).join('')}</tbody></table>
+    </div>`).join('')}
+
+    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);margin:1.75rem 0 10px;display:flex;align-items:center;gap:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--warn);display:inline-block"></span>
+      Documentos con vencimiento
+    </div>
+    ${DOCS_VENC.map(d=>`
+    <div class="card" style="margin-bottom:1.25rem">
+      <div class="card-header"><span class="card-title">${d.l}</span></div>
+      <table><thead><tr><th>Vehículo</th><th>Fecha emisión</th><th>Vencimiento</th><th>Estado</th><th class="text-center">Adjunto</th><th></th></tr></thead>
+      <tbody>${vehicles.map(v=>renderVencRow(v,d)).join('')}</tbody></table>
+    </div>`).join('')}
+  `;
+}
+
+function openFileViewer(fileKey) {
+  const f = docFiles[fileKey];
+  if (!f) return;
+  const overlay = document.getElementById('fileViewerModal');
+  document.getElementById('fileViewerTitle').textContent = f.name;
+  const body = document.getElementById('fileViewerBody');
+  if (f.type === 'application/pdf') {
+    body.innerHTML = `<iframe src="${f.data}" style="width:100%;height:70vh;border:none;border-radius:var(--radius-sm)"></iframe>`;
+  } else {
+    body.innerHTML = `<img src="${f.data}" style="max-width:100%;max-height:70vh;display:block;margin:auto;border-radius:var(--radius-sm)">`;
+  }
+  document.getElementById('fileViewerDownload').onclick = () => { const a=document.createElement('a');a.href=f.data;a.download=f.name;a.click(); };
+  overlay.classList.add('open');
+}
+
+// ─── MANTENCIONES ──────────────────────────────────────────────
+let mantFiles = {}; // key: mantId → [{name, type, size, data}]
+let _pendingMantFiles = []; // files staged in the open modal
+
+function populateMantSelect() {
+  const sel = document.getElementById('mVehiculo');
+  sel.innerHTML = '<option value="">Seleccionar vehículo...</option>';
+  vehicles.forEach(v => { const o=document.createElement('option'); o.value=v.id; o.textContent=v.nombre+' ('+v.patente+')'; sel.appendChild(o); });
+}
+
+function _resetMantModal() {
+  _pendingMantFiles = [];
+  document.getElementById('mFileInput').value = '';
+  document.getElementById('mFileList').style.display = 'none';
+  document.getElementById('mFileList').innerHTML = '';
+  document.getElementById('mDropZone').classList.remove('drag-over');
+}
+
+function openMantModal(tipo) {
+  const titles = {taller:'Ingreso a taller',incidente:'Registrar incidente',compra:'Compra de elemento'};
+  document.getElementById('mantEditId').value = '';
+  document.getElementById('mantType').value = tipo;
+  document.getElementById('mantModalTitle').textContent = titles[tipo];
+  document.getElementById('mTallerRow').style.display = tipo==='compra' ? 'none' : 'block';
+  document.getElementById('mElementoRow').style.display = tipo==='compra' ? 'block' : 'none';
+  document.getElementById('mFecha').value = fmt(today);
+  document.getElementById('mNombre').value = '';
+  document.getElementById('mVehiculo').value = '';
+  document.getElementById('mTaller').value = '';
+  document.getElementById('mElemento').value = '';
+  document.getElementById('mCosto').value = '';
+  document.getElementById('mDesc').value = '';
+  _resetMantModal();
+  populateMantSelect();
+  openModal('mantModal');
+}
+
+function openEditMant(id) {
+  const m = mantenciones.find(x=>x.id===id);
+  if (!m) return;
+  const titles = {taller:'Editar: Ingreso a taller',incidente:'Editar: Incidente',compra:'Editar: Compra de elemento'};
+  document.getElementById('mantEditId').value = m.id;
+  document.getElementById('mantType').value = m.tipo;
+  document.getElementById('mantModalTitle').textContent = titles[m.tipo];
+  document.getElementById('mTallerRow').style.display = m.tipo==='compra' ? 'none' : 'block';
+  document.getElementById('mElementoRow').style.display = m.tipo==='compra' ? 'block' : 'none';
+  populateMantSelect();
+  document.getElementById('mNombre').value = m.nombre || '';
+  document.getElementById('mVehiculo').value = m.vehId;
+  document.getElementById('mFecha').value = m.fecha;
+  document.getElementById('mTaller').value = m.taller || '';
+  document.getElementById('mElemento').value = m.elemento || '';
+  document.getElementById('mCosto').value = m.costo || '';
+  document.getElementById('mDesc').value = m.desc || '';
+  // Load existing files
+  _resetMantModal();
+  const existing = mantFiles[m.id] || [];
+  existing.forEach(f => _pendingMantFiles.push({...f, _existing: true}));
+  renderMantFileList();
+  openModal('mantModal');
+}
+
+function deleteMant(id) {
+  if (!confirm('¿Eliminar este registro de mantención?')) return;
+  mantenciones = mantenciones.filter(x=>x.id!==id);
+  delete mantFiles[id];
+  renderMant(); renderHistorial(); renderDashboard();
+}
+
+function handleMantDrop(e) {
+  e.preventDefault();
+  document.getElementById('mDropZone').classList.remove('drag-over');
+  if (e.dataTransfer.files) [...e.dataTransfer.files].forEach(processMantFile);
+}
+function handleMantFileSelect(input) {
+  if (input.files) [...input.files].forEach(processMantFile);
+  input.value = '';
+}
+function processMantFile(file) {
+  if (file.size > 10*1024*1024) { alert(`"${file.name}" supera los 10 MB.`); return; }
+  const allowed = ['application/pdf','image/jpeg','image/png','image/webp'];
+  if (!allowed.includes(file.type)) { alert(`Formato no permitido: ${file.name}`); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _pendingMantFiles.push({name:file.name, type:file.type, size:file.size, data:e.target.result});
+    renderMantFileList();
+  };
+  reader.readAsDataURL(file);
+}
+function removeMantFile(idx) {
+  _pendingMantFiles.splice(idx, 1);
+  renderMantFileList();
+}
+function renderMantFileList() {
+  const box = document.getElementById('mFileList');
+  if (!_pendingMantFiles.length) { box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display = 'block';
+  box.innerHTML = _pendingMantFiles.map((f,i) => {
+    const isImg = f.type.startsWith('image/');
+    const sizeTxt = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
+    return `<div class="file-preview-box" style="margin-bottom:6px">
+      ${isImg ? `<img src="${f.data}" class="file-thumb" alt="">` : `<div class="file-icon file-icon-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>`}
+      <div class="file-info"><div class="file-name">${f.name}</div><div class="file-size">${sizeTxt}</div></div>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-sm" onclick="viewMantFile(${i})" title="Ver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="removeMantFile(${i})" title="Quitar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function viewMantFile(idx) {
+  const f = _pendingMantFiles[idx];
+  if (!f) return;
+  const win = window.open();
+  if (f.type === 'application/pdf') win.document.write(`<iframe src="${f.data}" style="width:100%;height:100vh;border:none"></iframe>`);
+  else win.document.write(`<img src="${f.data}" style="max-width:100%;display:block;margin:auto">`);
+}
+
+function saveMant() {
+  const vId = parseInt(document.getElementById('mVehiculo').value);
+  if (!vId) { alert('Selecciona un vehículo'); return; }
+  const editId = parseInt(document.getElementById('mantEditId').value);
+  const data = {
+    nombre: document.getElementById('mNombre').value.trim(),
+    vehId: vId,
+    tipo: document.getElementById('mantType').value,
+    fecha: document.getElementById('mFecha').value,
+    taller: document.getElementById('mTaller').value,
+    elemento: document.getElementById('mElemento').value,
+    costo: parseInt(document.getElementById('mCosto').value)||0,
+    desc: document.getElementById('mDesc').value
+  };
+  let targetId;
+  if (editId) {
+    const idx = mantenciones.findIndex(x=>x.id===editId);
+    if (idx>=0) { mantenciones[idx] = {...mantenciones[idx], ...data}; targetId = editId; }
+  } else {
+    targetId = nextMantId++;
+    mantenciones.unshift({id: targetId, ...data});
+  }
+  // Save files
+  if (_pendingMantFiles.length) mantFiles[targetId] = [..._pendingMantFiles];
+  else if (!editId) delete mantFiles[targetId];
+
+  closeModal('mantModal');
+  _resetMantModal();
+  renderMant(); renderHistorial(); renderDashboard();
+}
+
+function renderMant() {
+  const vf = document.getElementById('mantVehFilter');
+  if (vf) {
+    const prev = vf.value || 'all';
+    vf.innerHTML = '<option value="all">Todos los vehículos</option>';
+    vehicles.forEach(v => { const o=document.createElement('option'); o.value=v.id; o.textContent=v.nombre; vf.appendChild(o); });
+    vf.value = prev;
+    const filtered = prev === 'all' ? mantenciones : mantenciones.filter(m=>m.vehId==prev);
+    renderTimeline(filtered, 'mantList');
+  } else {
+    renderTimeline(mantenciones, 'mantList');
+  }
+}
+
+function renderTimeline(items, container) {
+  const labels = {taller:'Taller',incidente:'Incidente',compra:'Compra'};
+  document.getElementById(container).innerHTML = items.length ? items.map(m => {
+    const v = vehicles.find(x=>x.id===m.vehId);
+    const files = mantFiles[m.id] || [];
+    const displayTitle = m.nombre
+      ? `<strong>${m.nombre}</strong> <span style="font-weight:400;color:var(--text-2)">· ${v?v.nombre:'—'} · ${labels[m.tipo]}</span>`
+      : `${v?v.nombre:'—'} <span style="font-weight:400;color:var(--text-2)">— ${labels[m.tipo]}</span>`;
+    return `<div class="tl-item">
+      <div class="tl-icon tl-${m.tipo}">${iconSVG[m.tipo]}</div>
+      <div class="tl-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div class="tl-title">${displayTitle}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-sm" onclick="openEditMant(${m.id})" title="Editar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteMant(${m.id})" title="Eliminar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="tl-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${fmtDate(m.fecha)}</span>
+          ${m.taller?`<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${m.taller}</span>`:''}
+          ${m.elemento?`<span>📦 ${m.elemento}</span>`:''}
+          ${m.costo?`<span class="tl-cost">$${m.costo.toLocaleString('es-CL')}</span>`:''}
+        </div>
+        ${m.desc?`<div style="font-size:12px;color:var(--text-2);margin-top:3px">${m.desc}</div>`:''}
+        ${files.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+          ${files.map((f,i)=>`<button class="attach-btn" onclick="viewMantFileById(${m.id},${i})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            ${f.name.length>20?f.name.slice(0,18)+'…':f.name}
+          </button>`).join('')}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Sin registros.</div>`;
+}
+
+function viewMantFileById(mantId, idx) {
+  const files = mantFiles[mantId] || [];
+  const f = files[idx];
+  if (!f) return;
+  document.getElementById('fileViewerTitle').textContent = f.name;
+  const body = document.getElementById('fileViewerBody');
+  if (f.type === 'application/pdf') body.innerHTML = `<iframe src="${f.data}" style="width:100%;height:70vh;border:none;border-radius:var(--radius-sm)"></iframe>`;
+  else body.innerHTML = `<img src="${f.data}" style="max-width:100%;max-height:70vh;display:block;margin:auto;border-radius:var(--radius-sm)">`;
+  document.getElementById('fileViewerDownload').onclick = () => { const a=document.createElement('a');a.href=f.data;a.download=f.name;a.click(); };
+  document.getElementById('fileViewerModal').classList.add('open');
+}
+
+function renderHistorial() {
+  const vf = document.getElementById('histVehFilter');
+  vf.innerHTML = '<option value="all">Todos los vehículos</option>';
+  vehicles.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.nombre;vf.appendChild(o);});
+  vf.value = vf.value || 'all';
+  const vVal = vf.value, tVal = document.getElementById('histTipoFilter').value;
+  const filtered = mantenciones.filter(m=>(vVal==='all'||m.vehId==vVal)&&(tVal==='all'||m.tipo===tVal));
+  renderTimeline(filtered, 'histList');
+}
+
+// ─── DASHBOARD ─────────────────────────────────────────────────
+function renderDashboard() {
+  // Metrics — only count expiring docs
+  let venc=0, prox=0;
+  vehicles.forEach(v=>DOCS_VENC.forEach(d=>{const diff=diffDays(v[d.k]);if(diff<0)venc++;else if(diff<=30)prox++;}));
+  const mes = mantenciones.filter(m=>{const d=new Date(m.fecha);return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()}).length;
+  const totalCosto = mantenciones.reduce((a,m)=>a+m.costo,0);
+  document.getElementById('metricsGrid').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Total vehículos</div><div class="metric-value">${vehicles.length}</div><div class="metric-sub">en flota</div></div>
+    <div class="metric-card"><div class="metric-label">Docs vencidos</div><div class="metric-value danger">${venc}</div><div class="metric-sub">requieren atención</div></div>
+    <div class="metric-card"><div class="metric-label">Vence en 30 días</div><div class="metric-value warn">${prox}</div><div class="metric-sub">próximos vencimientos</div></div>
+    <div class="metric-card"><div class="metric-label">Mantenciones mes</div><div class="metric-value ok">${mes}</div><div class="metric-sub">$${totalCosto.toLocaleString('es-CL')} total</div></div>
+  `;
+
+  // Alert banners — only expiring docs
+  const alerts = [];
+  vehicles.forEach(v=>{
+    DOCS_VENC.forEach(d=>{
+      const diff=diffDays(v[d.k]);
+      if(diff<0) alerts.push({type:'danger',msg:`<strong>${v.nombre}</strong> — ${d.l}: <strong>VENCIDO</strong> hace ${Math.abs(diff)} días`});
+      else if(diff<=alertCfg.critDays) alerts.push({type:'danger',msg:`<strong>${v.nombre}</strong> — ${d.l}: vence en ${diff} días (${fmtDate(v[d.k])})`});
+      else if(diff<=alertCfg.days) alerts.push({type:'warn',msg:`<strong>${v.nombre}</strong> — ${d.l}: vence el ${fmtDate(v[d.k])}`});
+    });
+  });
+  const alertIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>`;
+  document.getElementById('alertBanners').innerHTML = alerts.slice(0,6).map(a=>`<div class="alert alert-${a.type}">${alertIcon} <span>${a.msg}</span></div>`).join('');
+
+  // Upcoming expiring docs
+  const upcoming = [];
+  vehicles.forEach(v=>DOCS_VENC.forEach(d=>{const diff=diffDays(v[d.k]);if(diff<=60)upcoming.push({v,d,diff});}));
+  upcoming.sort((a,b)=>a.diff-b.diff);
+  document.getElementById('dashDocList').innerHTML = `<table><thead><tr><th>Vehículo</th><th>Documento</th><th class="text-center">Vence</th></tr></thead><tbody>${
+    upcoming.slice(0,6).map(u=>`<tr><td style="font-size:13px;font-weight:500">${u.v.nombre}</td><td style="font-size:13px">${u.d.l}</td><td class="text-center"><span class="badge badge-${statusOf(u.v[u.d.k])}">${statusLabel(u.v[u.d.k])}</span></td></tr>`).join('') || '<tr><td colspan="3" class="empty">Sin vencimientos próximos.</td></tr>'
+  }</tbody></table>`;
+
+  // Recent mant
+  document.getElementById('dashMantList').innerHTML = mantenciones.slice(0,5).map(m=>{
+    const v=vehicles.find(x=>x.id===m.vehId);
+    const labels={taller:'Taller',incidente:'Incidente',compra:'Compra'};
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 1.25rem;border-bottom:1px solid var(--border)">
+      <div class="tl-icon tl-${m.tipo}" style="width:28px;height:28px">${iconSVG[m.tipo]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v?v.nombre:'—'}</div>
+        <div style="font-size:12px;color:var(--text-2)">${labels[m.tipo]} · ${fmtDate(m.fecha)}</div>
+      </div>
+      ${m.costo?`<div style="font-size:12px;font-weight:600;color:var(--ok);font-family:'DM Mono',monospace;flex-shrink:0">$${m.costo.toLocaleString('es-CL')}</div>`:''}
+    </div>`;
+  }).join('') || `<div class="empty">Sin mantenciones.</div>`;
+}
+
+// ─── ALERTS ────────────────────────────────────────────────────
+function renderEmailModal() {
+  document.getElementById('modalEmailTagList').innerHTML = alertEmails.map(e=>`<div class="email-tag">${e}<button onclick="removeEmail('${e}','modal')">×</button></div>`).join('');
+}
+function renderEmailPage() {
+  document.getElementById('emailTagList').innerHTML = alertEmails.map(e=>`<div class="email-tag">${e}<button onclick="removeEmail('${e}','page')">×</button></div>`).join('');
+  document.getElementById('cfgAlertDays').value = alertCfg.days;
+  document.getElementById('cfgCritDays').value = alertCfg.critDays;
+}
+function removeEmail(e, src) {
+  alertEmails = alertEmails.filter(x=>x!==e);
+  if(src==='modal') renderEmailModal(); else renderEmailPage();
+}
+function addEmail() {
+  const e = document.getElementById('newEmailInput').value.trim();
+  if(!e||!e.includes('@')) return;
+  if(!alertEmails.includes(e)) alertEmails.push(e);
+  document.getElementById('newEmailInput').value='';
+  renderEmailPage();
+}
+function addEmailModal() {
+  const e = document.getElementById('modalNewEmail').value.trim();
+  if(!e||!e.includes('@')) return;
+  if(!alertEmails.includes(e)) alertEmails.push(e);
+  document.getElementById('modalNewEmail').value='';
+  renderEmailModal();
+}
+function saveAlertConfig() {
+  alertCfg.days = parseInt(document.getElementById('cfgAlertDays').value)||30;
+  alertCfg.critDays = parseInt(document.getElementById('cfgCritDays').value)||7;
+  alert('✓ Configuración guardada. Alertas configuradas para: '+alertEmails.join(', '));
+  renderDashboard();
+}
+function saveAlertModal() {
+  alertCfg.days = parseInt(document.getElementById('mAlertDays').value)||30;
+  alertCfg.critDays = parseInt(document.getElementById('mCritDays').value)||7;
+  closeModal('alertasModal');
+  alert('✓ Configuración guardada. Alertas configuradas para: '+alertEmails.join(', '));
+  renderDashboard();
+}
+function sendTestAlert() {
+  if (!alertEmails.length) { alert('Agrega al menos un correo en la configuración de Alertas.'); return; }
+  if (!gasUrl) {
+    alert('Para enviar correos reales conecta Google Sheets primero (botón "Sheets").\n\nCorreos configurados: ' + alertEmails.join(', '));
+    return;
+  }
+  const subject = '🚗 [Prueba] Alerta Flota Vehicular';
+  const body = `Este es un correo de prueba del sistema de gestión de flota.\n\nSi lo recibes, las alertas están funcionando.\n\nVehículos registrados: ${vehicles.length}\nMantenciones registradas: ${mantenciones.length}`;
+  fetch(gasUrl, {
+    method:'POST', mode:'cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'sendAlert', emails: alertEmails, subject, body})
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok) alert('✓ Correo de prueba enviado a: ' + alertEmails.join(', '));
+    else alert('✗ Error: ' + (d.error||'desconocido') + '\n\nNota: el envío de correos requiere activar el servicio Gmail en Apps Script.');
+  }).catch(()=> alert('Correos configurados: ' + alertEmails.join(', ') + '\n\n(Para envío real configura Gmail en Apps Script — ver guía)'));
+}
+
+// ─── ALERTAS VÍA APPS SCRIPT ────────────────────────────────────
+async function enviarAlertasGmail() {
+  if (!gasUrl) { alert('Conecta Google Sheets primero (botón "Sheets") para enviar correos.'); return; }
+  if (!alertEmails.length) { alert('Configura al menos un correo en Alertas.'); return; }
+  const alerts = [];
+  vehicles.forEach(v => {
+    DOCS_VENC.forEach(d => {
+      const diff = diffDays(v[d.k]);
+      if (diff <= alertCfg.days) {
+        alerts.push({ vehicle: v.nombre, doc: d.l, diff, date: fmtDate(v[d.k]) });
+      }
+    });
+  });
+  if (!alerts.length) { alert('No hay vencimientos próximos en los próximos '+alertCfg.days+' días.'); return; }
+  const subject = `🚗 Alerta Flota: ${alerts.length} documento${alerts.length>1?'s':''} por vencer`;
+  const body = alerts.map(a=>`${a.vehicle} — ${a.doc}: ${a.diff<0?'VENCIDO hace '+Math.abs(a.diff)+'d':'vence en '+a.diff+'d ('+a.date+')'}`).join('\n');
+  try {
+    const r = await fetch(gasUrl, {
+      method:'POST', mode:'cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'sendAlert', emails: alertEmails, subject, body})
+    });
+    const d = await r.json();
+    if (d.ok) alert(`✓ Alerta enviada a ${alertEmails.join(', ')}\n${alerts.length} documentos reportados.`);
+    else alert('✗ Error: ' + (d.error||'desconocido') + '\n\nRevisa que el script tenga permisos de Gmail habilitados.');
+  } catch(err) {
+    alert('✗ Error de red: ' + err.message);
+  }
+}
+
+// Hook: auto-envío de alertas al guardar si hay vencimientos críticos
+const _origSaveMant2 = saveMant;
+saveMant = function() {
+  _origSaveMant2.apply(this, arguments);
+};
+
+
+// ─── EXPORTAR / IMPORTAR ────────────────────────────────────────
+function collectData() {
+  return { vehicles, mantenciones, docFiles, mantFiles, alertEmails, alertCfg, exportedAt: new Date().toISOString() };
+}
+
+function applyData(data) {
+  if (data.vehicles)     vehicles     = data.vehicles;
+  if (data.mantenciones) mantenciones = data.mantenciones;
+  if (data.docFiles)     docFiles     = data.docFiles;
+  if (data.mantFiles)    mantFiles    = data.mantFiles;
+  if (data.alertEmails)  alertEmails  = data.alertEmails;
+  if (data.alertCfg)     alertCfg     = data.alertCfg;
+  // Recalculate next IDs
+  nextVehId  = vehicles.length     ? Math.max(...vehicles.map(v=>v.id))     + 1 : 1;
+  nextMantId = mantenciones.length ? Math.max(...mantenciones.map(m=>m.id)) + 1 : 1;
+  renderDashboard(); renderFlota();
+}
+
+function exportarDatos() {
+  const json = JSON.stringify(collectData(), null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `flota_datos_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importarDatos(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('importStatus');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.vehicles) throw new Error('Formato inválido');
+      if (!confirm(`¿Cargar datos del archivo "${file.name}"?\n\nEsto reemplazará todos los datos actuales.`)) { input.value=''; return; }
+      applyData(data);
+      status.style.display = 'block';
+      status.style.color = 'var(--ok)';
+      status.textContent = `✓ Datos cargados correctamente (${data.vehicles.length} vehículos, ${data.mantenciones.length} mantenciones)`;
+      closeModal('dataModal');
+    } catch(err) {
+      status.style.display = 'block';
+      status.style.color = 'var(--danger)';
+      status.textContent = '✗ Error al leer el archivo: ' + err.message;
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─── GOOGLE APPS SCRIPT SYNC ────────────────────────────────────
+let gasUrl       = localStorage.getItem('gasUrl') || '';
+let gasAutoSave  = localStorage.getItem('gasAutoSave') === '1';
+let gasConnected = false;
+let _gasSaving   = false;
+
+function gasSetStatus(msg, type) {
+  // type: 'ok' | 'error' | 'info' | ''
+  const el = document.getElementById('gasStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = type==='ok' ? 'var(--ok)' : type==='error' ? 'var(--danger)' : 'var(--text-2)';
+}
+
+function forceGasConnect() {
+  const val = document.getElementById('gasUrlInput').value.trim();
+  if (!val.includes('script.google.com') || !val.includes('/macros/')) {
+    alert('Ingresa primero una URL válida de Google Apps Script.'); return;
+  }
+  gasUrl = val;
+  localStorage.setItem('gasUrl', val);
+  gasConnected = true;
+  renderGasModal();
+  updateDriveBtnStyle(true);
+  gasSetStatus('Conexión forzada. Prueba guardar datos para verificar que funcione.', 'info');
+}
+
+function saveGasUrl() {
+  const val = document.getElementById('gasUrlInput').value.trim();
+  if (!val.includes('script.google.com') || !val.includes('/macros/') || !val.includes('/exec')) {
+    alert('La URL no parece válida.\n\nFormatos aceptados:\n• https://script.google.com/macros/s/…/exec\n• https://script.google.com/a/macros/tudominio.com/s/…/exec\n\nRevisa que hayas copiado la URL completa desde "Implementar".'); return;
+  }
+  gasUrl = val;
+  localStorage.setItem('gasUrl', val);
+  gasTestConnection();
+}
+
+function clearGasUrl() {
+  if (!confirm('¿Desconectar del Apps Script?')) return;
+  gasUrl = ''; gasConnected = false;
+  localStorage.removeItem('gasUrl');
+  document.getElementById('gasUrlInput').value = '';
+  renderGasModal();
+}
+
+async function _gasFetch(url, opts={}) {
+  // Apps Script redirects POST to a new URL — must follow redirect manually
+  // For GET requests use no-cors isn't useful, so we try cors first then fallback
+  try {
+    const r = await fetch(url, {...opts, mode:'cors', redirect:'follow'});
+    const text = await r.text();
+    return JSON.parse(text);
+  } catch(e) {
+    // If CORS fails on local file, try with no-cors (can't read response, assume ok)
+    if (opts.method === 'POST') {
+      await fetch(url, {...opts, mode:'no-cors', redirect:'follow'});
+      return {ok:true, data:{}, _blind:true};
+    }
+    throw e;
+  }
+}
+
+async function gasTestConnection() {
+  gasSetStatus('Probando conexión…', 'info');
+  const pingUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=ping';
+  try {
+    const d = await _gasFetch(pingUrl);
+    if (d.ok) {
+      gasConnected = true;
+      localStorage.setItem('gasUrl', gasUrl);
+      renderGasModal();
+      gasSetStatus('✓ Conectado correctamente', 'ok');
+      updateDriveBtnStyle(true);
+    } else {
+      gasSetStatus('✗ Error: ' + (d.error||JSON.stringify(d)), 'error');
+    }
+  } catch(e) {
+    // CORS block from local file — but script works, so force connect
+    gasConnected = true;
+    localStorage.setItem('gasUrl', gasUrl);
+    renderGasModal();
+    updateDriveBtnStyle(true);
+    gasSetStatus('✓ Script verificado. Conectado (modo local).', 'ok');
+  }
+}
+
+function renderGasModal() {
+  const disconn = document.getElementById('gasDisconnected');
+  const conn    = document.getElementById('gasConnected');
+  if (!disconn || !conn) return;
+  if (gasConnected) {
+    disconn.style.display = 'none';
+    conn.style.display = 'block';
+    const short = gasUrl.length > 60 ? gasUrl.slice(0,30)+'…'+gasUrl.slice(-15) : gasUrl;
+    document.getElementById('gasUrlDisplay').textContent = short;
+    document.getElementById('gasAutoSaveCheck').checked = gasAutoSave;
+  } else {
+    disconn.style.display = 'block';
+    conn.style.display = 'none';
+    document.getElementById('gasUrlInput').value = gasUrl;
+  }
+}
+
+function toggleGasAutoSave() {
+  gasAutoSave = document.getElementById('gasAutoSaveCheck').checked;
+  localStorage.setItem('gasAutoSave', gasAutoSave ? '1' : '0');
+}
+
+function updateDriveBtnStyle(connected) {
+  const btn = document.getElementById('driveBtn');
+  const lbl = document.getElementById('driveBtnLabel');
+  if (!btn || !lbl) return;
+  if (connected) {
+    btn.style.background = 'var(--ok-bg)';
+    btn.style.color = 'var(--ok)';
+    btn.style.borderColor = 'var(--ok-border)';
+    lbl.textContent = 'Sheets ✓';
+  } else {
+    btn.style = '';
+    lbl.textContent = 'Sheets';
+  }
+}
+
+async function gasSave() {
+  if (!gasUrl) { alert('Configura la URL del Apps Script primero.'); return; }
+  if (_gasSaving) return;
+  _gasSaving = true;
+  const btn = document.getElementById('gasSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+  gasSetStatus('Guardando en Google Sheets…', 'info');
+  try {
+    const data = collectData();
+    const d = await _gasFetch(gasUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'save', data })
+    });
+    if (d._blind) {
+      // no-cors mode — assume success
+      const t = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      gasSetStatus(`✓ Datos enviados a las ${t}`, 'ok');
+      document.getElementById('gasLastSave').textContent = `Último guardado: ${new Date().toLocaleString('es-CL')}`;
+    } else if (d.ok) {
+      const t = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      gasSetStatus(`✓ Guardado a las ${t} — ${d.data.vehicles} vehículos · ${d.data.mantenciones} mantenciones`, 'ok');
+      document.getElementById('gasLastSave').textContent = `Último guardado: ${new Date().toLocaleString('es-CL')}`;
+    } else {
+      gasSetStatus('✗ Error al guardar: ' + d.error, 'error');
+    }
+  } catch(e) {
+    gasSetStatus('✗ Error: ' + e.message, 'error');
+  }
+  _gasSaving = false;
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar en Sheets`;
+  }
+}
+
+async function gasLoad() {
+  if (!gasUrl) { alert('Configura la URL del Apps Script primero.'); return; }
+  const btn = document.getElementById('gasLoadBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cargando…'; }
+  gasSetStatus('Cargando desde Google Sheets…', 'info');
+  try {
+    const loadUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=load';
+    const d = await _gasFetch(loadUrl);
+    if (!d.ok) throw new Error(d.error);
+    const {vehicles: v, mantenciones: m} = d.data;
+    if (!v || !v.length) {
+      gasSetStatus('La planilla no tiene datos aún. Guarda primero desde el sistema.', 'info');
+      if(btn){btn.disabled=false;btn.textContent='Cargar desde Sheets';}
+      return;
+    }
+    if (!confirm(`¿Cargar datos desde Google Sheets?\n\n${v.length} vehículos · ${m.length} mantenciones\n\nEsto reemplazará los datos actuales.`)) {
+      if(btn){btn.disabled=false;btn.textContent='Cargar desde Sheets';} return;
+    }
+    applyData({vehicles:v, mantenciones:m, docFiles:{}, mantFiles:{}});
+    closeModal('driveModal');
+    gasSetStatus(`✓ ${v.length} vehículos y ${m.length} mantenciones cargados`, 'ok');
+    document.getElementById('gasLastSave').textContent = `Cargado: ${new Date().toLocaleString('es-CL')}`;
+  } catch(e) {
+    gasSetStatus('✗ Error al cargar: ' + e.message, 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Cargar desde Sheets'; }
+}
+
+// Hook auto-save into data-changing functions
+const _origSaveVeh = saveVehiculo;
+saveVehiculo = function() { _origSaveVeh.apply(this,arguments); if(gasAutoSave && gasUrl) gasSave(); };
+const _origSaveMant = saveMant;
+saveMant = function() { _origSaveMant.apply(this,arguments); if(gasAutoSave && gasUrl) gasSave(); };
+const _origDeleteVeh = deleteVehiculo;
+deleteVehiculo = function(id) { _origDeleteVeh.apply(this,[id]); if(gasAutoSave && gasUrl) gasSave(); };
+const _origDeleteMant = deleteMant;
+deleteMant = function(id) { _origDeleteMant.apply(this,[id]); if(gasAutoSave && gasUrl) gasSave(); };
+
+// ─── CAMBIOS SIN GUARDAR ────────────────────────────────────────
+let _hasUnsavedChanges = false;
+
+function markUnsaved() {
+  _hasUnsavedChanges = true;
+  const indicator = document.getElementById('unsavedIndicator');
+  if (indicator) indicator.style.display = 'flex';
+}
+
+function markSaved() {
+  _hasUnsavedChanges = false;
+  const indicator = document.getElementById('unsavedIndicator');
+  if (indicator) indicator.style.display = 'none';
+}
+
+// Avisar al cerrar si hay cambios sin guardar
+window.addEventListener('beforeunload', e => {
+  if (_hasUnsavedChanges && gasUrl) {
+    e.preventDefault();
+    e.returnValue = '¿Cerrar sin guardar en Google Sheets? Los cambios se perderán.';
+    return e.returnValue;
+  }
+});
+
+// Interceptar gasSave para marcar como guardado
+const _origGasSave = gasSave;
+gasSave = async function() {
+  await _origGasSave.apply(this, arguments);
+  // Mark as saved if status shows success
+  setTimeout(() => {
+    const st = document.getElementById('gasStatus');
+    if (st && st.textContent.includes('✓')) markSaved();
+  }, 500);
+};
+
+// Interceptar gasLoad para marcar como guardado (datos recién cargados = en sync)
+const _origGasLoad = gasLoad;
+gasLoad = async function() {
+  await _origGasLoad.apply(this, arguments);
+  markSaved();
+};
+
+// Marcar como sin guardar cuando hay cambios de datos
+const _mSaveVeh = saveVehiculo;
+saveVehiculo = function() { _mSaveVeh.apply(this,arguments); markUnsaved(); };
+const _mSaveMant = saveMant;
+saveMant = function() { _mSaveMant.apply(this,arguments); markUnsaved(); };
+const _mDelVeh = deleteVehiculo;
+deleteVehiculo = function(id) { _mDelVeh.apply(this,[id]); markUnsaved(); };
+const _mDelMant = deleteMant;
+deleteMant = function(id) { _mDelMant.apply(this,[id]); markUnsaved(); };
+const _mSaveDoc = saveDoc;
+saveDoc = function() { _mSaveDoc.apply(this,arguments); markUnsaved(); };
+
+// ─── INIT ──────────────────────────────────────────────────────
+async function startupLoad() {
+  renderDashboard();
+  renderFlota();
+
+  if (!gasUrl) return;
+
+  // Show loading banner
+  const banner = document.getElementById('startupBanner');
+  if (banner) banner.style.display = 'flex';
+
+  try {
+    await gasTestConnection();
+    if (!gasConnected) { if (banner) banner.style.display='none'; return; }
+
+    const loadUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=load';
+    const d = await _gasFetch(loadUrl);
+    if (d.ok && d.data.vehicles && d.data.vehicles.length) {
+      applyData({vehicles: d.data.vehicles, mantenciones: d.data.mantenciones, docFiles:{}, mantFiles:{}});
+      markSaved();
+      const ts = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      const el = document.getElementById('gasLastSave');
+      if (el) el.textContent = `Cargado automáticamente a las ${ts}`;
+    }
+  } catch(e) {
+    // silent — user can load manually
+  }
+
+  if (banner) banner.style.display = 'none';
+  renderGasModal();
+}
+
+startupLoad();
+</script>
+<!-- MODAL: File Viewer -->
+<div class="modal-overlay" id="fileViewerModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <span class="modal-title" id="fileViewerTitle">Documento</span>
+      <button class="modal-close" onclick="closeModal('fileViewerModal')">×</button>
+    </div>
+    <div id="fileViewerBody"></div>
+    <div class="modal-footer">
+      <button class="btn" id="fileViewerDownload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </button>
+      <button class="btn btn-primary" onclick="closeModal('fileViewerModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Datos (Exportar / Importar) -->
+<div class="modal-overlay" id="dataModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">Guardar y cargar datos</span>
+      <button class="modal-close" onclick="closeModal('dataModal')">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:1.25rem">Exporta todos los datos del sistema a un archivo <code>.json</code> y guárdalo en Google Drive. Para continuar en otra sesión, carga el mismo archivo.</p>
+
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:10px">💾 Guardar datos</div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">Descarga un archivo con todos los vehículos, mantenciones, documentos y archivos adjuntos.</p>
+      <button class="btn btn-primary" onclick="exportarDatos()" style="width:100%">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar y descargar flota_datos.json
+      </button>
+    </div>
+
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:10px">📂 Cargar datos</div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">Carga un archivo <code>flota_datos.json</code> guardado previamente. <strong>Reemplazará los datos actuales.</strong></p>
+      <label style="display:block;width:100%">
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importarDatos(this)">
+        <span class="btn" style="width:100%;justify-content:center;cursor:pointer;display:flex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Seleccionar archivo JSON
+        </span>
+      </label>
+      <div id="importStatus" style="font-size:12px;margin-top:8px;display:none"></div>
+    </div>
+
+    <div style="background:var(--info-bg);border:1px solid rgba(30,74,138,0.15);border-radius:var(--radius);padding:10px 14px">
+      <p style="font-size:12px;color:var(--info)">
+        <strong>Flujo recomendado:</strong> Al terminar de trabajar → <em>Exportar</em> → subir el .json a Google Drive.
+        La próxima vez → bajar el .json desde Drive → <em>Cargar</em> → continuar trabajando.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('dataModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Google Apps Script Sync -->
+<div class="modal-overlay" id="driveModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title">Sincronización con Google Sheets</span>
+      <button class="modal-close" onclick="closeModal('driveModal')">×</button>
+    </div>
+
+    <!-- No conectado -->
+    <div id="gasDisconnected">
+      <div style="text-align:center;padding:.5rem 0 1.25rem">
+        <div style="width:52px;height:52px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <svg viewBox="0 0 87.3 78" style="width:28px;height:28px"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L27.5 51H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.9 1.2C28.55.4 27 0 25.45 0c-1.55 0-3.1.4-4.5 1.2L6.6 26.5l13.75 23.85z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.25z" fill="#ea4335"/><path d="M43.65 25L57.4 1.2C56 .4 54.45 0 52.9 0H34.4c-1.55 0-3.1.4-4.5 1.2z" fill="#00832d"/><path d="M59.8 50.35H27.5L13.75 76.8c1.4.8 2.95 1.2h50.8c1.55 0 3.1-.4 4.5-1.2z" fill="#2684fc"/><path d="M73.4 26.5l-13.25-23c-1.4-.8-2.95-1.2-4.5-1.2H43.65L59.8 26.5l13.75 23.85z" fill="#ffba00"/></svg>
+        </div>
+        <p style="font-size:15px;font-weight:600;margin-bottom:4px">Conectar con Google Sheets</p>
+        <p style="font-size:13px;color:var(--text-2)">Pega la URL de tu Google Apps Script para sincronizar los datos</p>
+      </div>
+      <div style="background:var(--info-bg);border:1px solid rgba(30,74,138,0.15);border-radius:var(--radius);padding:10px 14px;margin-bottom:1.25rem">
+        <p style="font-size:12px;color:var(--info)">
+          ¿Aún no tienes el script? Abre el archivo <strong>guia_instalacion.md</strong> y sigue los 6 pasos. Toma menos de 10 minutos y no requiere cuenta de pago.
+        </p>
+      </div>
+      <div class="form-field" style="margin-bottom:1rem">
+        <label class="form-label">URL del Google Apps Script</label>
+        <input type="url" class="form-input" id="gasUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;font-family:'DM Mono',monospace">
+      </div>
+      <button class="btn btn-primary" onclick="saveGasUrl()" style="width:100%">Conectar y probar</button>
+      <button class="btn" onclick="forceGasConnect()" style="width:100%;margin-top:8px;font-size:12px">
+        ¿No conecta? → Forzar conexión de todas formas
+      </button>
+    </div>
+
+    <!-- Conectado -->
+    <div id="gasConnected" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;padding:.875rem 1rem;background:var(--ok-bg);border:1px solid var(--ok-border);border-radius:var(--radius);margin-bottom:1.25rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--ok);flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--ok)">Conectado a Google Sheets</div>
+          <div style="font-size:11px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="gasUrlDisplay"></div>
+        </div>
+        <button class="btn btn-sm" onclick="clearGasUrl()" style="flex-shrink:0">Desconectar</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+        <button class="btn btn-primary" onclick="gasSave()" id="gasSaveBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar en Sheets
+        </button>
+        <button class="btn" onclick="gasLoad()" id="gasLoadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Cargar desde Sheets
+        </button>
+      </div>
+      <div id="gasStatus" style="font-size:12px;text-align:center;min-height:18px;padding:6px 0;color:var(--text-2)"></div>
+      <div id="gasLastSave" style="font-size:11px;text-align:center;color:var(--text-3);margin-bottom:10px"></div>
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:10px 14px">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gasAutoSaveCheck" onchange="toggleGasAutoSave()">
+          <div>
+            <div style="font-weight:500">Guardado automático</div>
+            <div style="font-size:11px;color:var(--text-3)">Sincroniza con Sheets cada vez que guardas un vehículo o mantención</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('driveModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
